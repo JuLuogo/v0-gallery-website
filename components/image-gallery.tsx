@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import Image from "next/image"
+import { Fancybox } from "@fancyapps/ui"
+import "@fancyapps/ui/dist/fancybox/fancybox.css"
 
 interface ImageGalleryProps {
   type: "horizontal" | "vertical"
@@ -28,6 +30,7 @@ export function ImageGallery({ type }: ImageGalleryProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const initialLoadDone = useRef(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const galleryContainerRef = useRef<HTMLDivElement>(null)
 
   const IMAGES_PER_PAGE = 20
   const baseUrl = type === "horizontal" ? "https://pic.acofork.com/ri/h" : "https://pic.acofork.com/ri/v"
@@ -47,7 +50,6 @@ export function ImageGallery({ type }: ImageGalleryProps) {
       script.async = true
 
       script.onload = () => {
-        // random.js 会执行一个 IIFE，我们需要拦截它
         const scriptContent = `
           (function() {
             var counts = window.__picCounts || {"h":979,"v":3596};
@@ -76,7 +78,6 @@ export function ImageGallery({ type }: ImageGalleryProps) {
       document.head.appendChild(script)
     }
 
-    // 如果已经加载过，直接使用缓存的值
     if (window.__picCounts) {
       const count = type === "horizontal" ? window.__picCounts.h : window.__picCounts.v
       setMaxCount(count)
@@ -148,6 +149,27 @@ export function ImageGallery({ type }: ImageGalleryProps) {
     }
   }, [loading, page, loadImages, maxCount])
 
+  useEffect(() => {
+    if (galleryContainerRef.current) {
+      Fancybox.bind(galleryContainerRef.current, "[data-fancybox]", {
+        Thumbs: {
+          type: "classic",
+        },
+        Toolbar: {
+          display: {
+            left: ["infobar"],
+            middle: ["zoomIn", "zoomOut", "toggle1to1", "rotateCCW", "rotateCW", "flipX", "flipY"],
+            right: ["slideshow", "fullscreen", "download", "thumbs", "close"],
+          },
+        },
+      })
+    }
+
+    return () => {
+      Fancybox.unbind(galleryContainerRef.current)
+    }
+  }, [images])
+
   const renderMasonryLayout = () => {
     const columnCount = getColumnCount()
     const columns: ImageItem[][] = Array.from({ length: columnCount }, () => [])
@@ -163,19 +185,26 @@ export function ImageGallery({ type }: ImageGalleryProps) {
           <div key={columnIndex} className="flex flex-col gap-4 flex-1">
             {column.map((image) => (
               <div key={`${type}-${image.id}`} className="group relative overflow-hidden rounded-lg bg-muted">
-                <Image
-                  src={image.url || "/placeholder.svg"}
-                  alt={`Gallery image ${image.id}`}
-                  width={800}
-                  height={600}
-                  className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
-                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  loading="lazy"
-                />
+                <a
+                  data-fancybox="gallery"
+                  href={image.url}
+                  data-caption={`#${image.id}`}
+                  className="w-full cursor-zoom-in block"
+                >
+                  <Image
+                    src={image.url || "/placeholder.svg"}
+                    alt={`Gallery image ${image.id}`}
+                    width={800}
+                    height={600}
+                    className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    loading="lazy"
+                  />
+                </a>
 
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 pointer-events-none" />
 
-                <div className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm text-foreground text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm text-foreground text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                   #{image.id}
                 </div>
               </div>
@@ -187,7 +216,7 @@ export function ImageGallery({ type }: ImageGalleryProps) {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full" ref={galleryContainerRef}>
       {renderMasonryLayout()}
 
       <div ref={loadMoreRef} className="flex justify-center py-8">
