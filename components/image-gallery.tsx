@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import Image from "next/image"
+import Lightbox from "yet-another-react-lightbox"
+import "yet-another-react-lightbox/styles.css"
 
 interface ImageGalleryProps {
   type: "horizontal" | "vertical"
@@ -24,7 +26,8 @@ export function ImageGallery({ type }: ImageGalleryProps) {
   const [loading, setLoading] = useState(false)
   const [maxCount, setMaxCount] = useState<number>(0)
   const [countsLoaded, setCountsLoaded] = useState(false)
-  const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const initialLoadDone = useRef(false)
@@ -48,7 +51,6 @@ export function ImageGallery({ type }: ImageGalleryProps) {
       script.async = true
 
       script.onload = () => {
-        // random.js 会执行一个 IIFE，我们需要拦截它
         const scriptContent = `
           (function() {
             var counts = window.__picCounts || {"h":979,"v":3596};
@@ -77,7 +79,6 @@ export function ImageGallery({ type }: ImageGalleryProps) {
       document.head.appendChild(script)
     }
 
-    // 如果已经加载过，直接使用缓存的值
     if (window.__picCounts) {
       const count = type === "horizontal" ? window.__picCounts.h : window.__picCounts.v
       setMaxCount(count)
@@ -149,6 +150,11 @@ export function ImageGallery({ type }: ImageGalleryProps) {
     }
   }, [loading, page, loadImages, maxCount])
 
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index)
+    setLightboxOpen(true)
+  }
+
   const renderMasonryLayout = () => {
     const columnCount = getColumnCount()
     const columns: ImageItem[][] = Array.from({ length: columnCount }, () => [])
@@ -162,10 +168,10 @@ export function ImageGallery({ type }: ImageGalleryProps) {
       <div className="flex gap-4 w-full" ref={containerRef}>
         {columns.map((column, columnIndex) => (
           <div key={columnIndex} className="flex flex-col gap-4 flex-1">
-            {column.map((image) => (
+            {column.map((image, imageIndex) => (
               <div key={`${type}-${image.id}`} className="group relative overflow-hidden rounded-lg bg-muted">
                 <button
-                  onClick={() => setSelectedImage(image)}
+                  onClick={() => openLightbox(imageIndex)}
                   className="w-full cursor-zoom-in"
                 >
                   <Image
@@ -208,39 +214,32 @@ export function ImageGallery({ type }: ImageGalleryProps) {
         )}
       </div>
 
-      {selectedImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
-          onClick={() => setSelectedImage(null)}
-        >
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              setSelectedImage(null)
-            }}
-            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-          
-          <div className="relative max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-            <Image
-              src={selectedImage.url}
-              alt={`Gallery image ${selectedImage.id}`}
-              width={1200}
-              height={900}
-              className="max-w-full max-h-[90vh] object-contain"
-              priority
-            />
-            <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-center py-2">
-              #{selectedImage.id}
+      <Lightbox
+        open={lightboxOpen}
+        close={() => setLightboxOpen(false)}
+        index={lightboxIndex}
+        slides={images.map((image) => ({ src: image.url, title: `#${image.id}` }))}
+        controller={{ touchAction: "pan-y" }}
+        render={{
+          slide: (slide) => (
+            <div className="relative w-full h-full flex items-center justify-center">
+              <Image
+                src={slide.src}
+                alt={slide.title || ""}
+                width={1200}
+                height={900}
+                className="max-w-full max-h-[85vh] object-contain"
+                priority
+              />
+              {slide.title && (
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-center py-2">
+                  {slide.title}
+                </div>
+              )}
             </div>
-          </div>
-        </div>
-      )}
+          ),
+        }}
+      />
     </div>
   )
 }
