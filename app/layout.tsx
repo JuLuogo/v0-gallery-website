@@ -7,7 +7,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'v0 App',
+  title: 'AcoFork PicGallery',
   description: 'Created with v0',
   generator: 'v0.app',
   icons: {
@@ -36,6 +36,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="https://q2.qlogo.cn/headimg_dl?dst_uin=2726730791&amp;spec=0"></link>
+      </head>
       <body className={`font-sans antialiased`}>
         {children}
         <Analytics />
