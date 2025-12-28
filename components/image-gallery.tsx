@@ -2,13 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import Image from "next/image"
-import dynamic from "next/dynamic"
-import "yet-another-react-lightbox/styles.css"
-
-const Lightbox = dynamic(
-  () => import("yet-another-react-lightbox").then((mod) => mod.default),
-  { ssr: false }
-)
+import { Fancybox } from "@fancyapps/ui"
+import "@fancyapps/ui/dist/fancybox/fancybox.css"
 
 interface ImageGalleryProps {
   type: "horizontal" | "vertical"
@@ -31,20 +26,14 @@ export function ImageGallery({ type }: ImageGalleryProps) {
   const [loading, setLoading] = useState(false)
   const [maxCount, setMaxCount] = useState<number>(0)
   const [countsLoaded, setCountsLoaded] = useState(false)
-  const [lightboxOpen, setLightboxOpen] = useState(false)
-  const [lightboxIndex, setLightboxIndex] = useState(0)
-  const [mounted, setMounted] = useState(false)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const initialLoadDone = useRef(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const galleryContainerRef = useRef<HTMLDivElement>(null)
 
   const IMAGES_PER_PAGE = 20
   const baseUrl = type === "horizontal" ? "https://pic.acofork.com/ri/h" : "https://pic.acofork.com/ri/v"
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const getColumnCount = () => {
     if (typeof window === "undefined") return 3
@@ -160,10 +149,26 @@ export function ImageGallery({ type }: ImageGalleryProps) {
     }
   }, [loading, page, loadImages, maxCount])
 
-  const openLightbox = (index: number) => {
-    setLightboxIndex(index)
-    setLightboxOpen(true)
-  }
+  useEffect(() => {
+    if (galleryContainerRef.current) {
+      Fancybox.bind(galleryContainerRef.current, "[data-fancybox]", {
+        Thumbs: {
+          type: "classic",
+        },
+        Toolbar: {
+          display: {
+            left: ["infobar"],
+            middle: ["zoomIn", "zoomOut", "toggle1to1", "rotateCCW", "rotateCW", "flipX", "flipY"],
+            right: ["slideshow", "fullscreen", "download", "thumbs", "close"],
+          },
+        },
+      })
+    }
+
+    return () => {
+      Fancybox.unbind(galleryContainerRef.current)
+    }
+  }, [images])
 
   const renderMasonryLayout = () => {
     const columnCount = getColumnCount()
@@ -178,11 +183,13 @@ export function ImageGallery({ type }: ImageGalleryProps) {
       <div className="flex gap-4 w-full" ref={containerRef}>
         {columns.map((column, columnIndex) => (
           <div key={columnIndex} className="flex flex-col gap-4 flex-1">
-            {column.map((image, imageIndex) => (
+            {column.map((image) => (
               <div key={`${type}-${image.id}`} className="group relative overflow-hidden rounded-lg bg-muted">
-                <button
-                  onClick={() => openLightbox(imageIndex)}
-                  className="w-full cursor-zoom-in"
+                <a
+                  data-fancybox="gallery"
+                  href={image.url}
+                  data-caption={`#${image.id}`}
+                  className="w-full cursor-zoom-in block"
                 >
                   <Image
                     src={image.url || "/placeholder.svg"}
@@ -193,7 +200,7 @@ export function ImageGallery({ type }: ImageGalleryProps) {
                     sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     loading="lazy"
                   />
-                </button>
+                </a>
 
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 pointer-events-none" />
 
@@ -209,7 +216,7 @@ export function ImageGallery({ type }: ImageGalleryProps) {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full" ref={galleryContainerRef}>
       {renderMasonryLayout()}
 
       <div ref={loadMoreRef} className="flex justify-center py-8">
@@ -223,16 +230,6 @@ export function ImageGallery({ type }: ImageGalleryProps) {
           <p className="text-muted-foreground text-sm">已加载全部 {maxCount} 张图片</p>
         )}
       </div>
-
-      {mounted && lightboxOpen && (
-        <Lightbox
-          open={lightboxOpen}
-          close={() => setLightboxOpen(false)}
-          index={lightboxIndex}
-          slides={images.map((image) => ({ src: image.url, alt: `#${image.id}` }))}
-          controller={{ touchAction: "pan-y" }}
-        />
-      )}
     </div>
   )
 }
