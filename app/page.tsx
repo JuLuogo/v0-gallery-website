@@ -43,7 +43,7 @@ export default function Home() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <ImageGallery type={galleryType} />
+        <ImageGallery key={galleryType} type={galleryType} />
       </main>
     </div>
   )
