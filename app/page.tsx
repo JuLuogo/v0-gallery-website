@@ -10,7 +10,7 @@ export default function Home() {
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-serif font-bold tracking-tight text-balance">Gallery</h1>
+            <h1 className="text-3xl font-serif font-bold tracking-tight text-balance">AcoFork PicGallery</h1>
 
             <div className="flex gap-2 rounded-lg bg-muted p-1">
               <button
