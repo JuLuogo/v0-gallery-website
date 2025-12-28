@@ -2,8 +2,13 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import Image from "next/image"
-import Lightbox from "yet-another-react-lightbox"
+import dynamic from "next/dynamic"
 import "yet-another-react-lightbox/styles.css"
+
+const Lightbox = dynamic(
+  () => import("yet-another-react-lightbox").then((mod) => mod.default),
+  { ssr: false }
+)
 
 interface ImageGalleryProps {
   type: "horizontal" | "vertical"
@@ -28,6 +33,7 @@ export function ImageGallery({ type }: ImageGalleryProps) {
   const [countsLoaded, setCountsLoaded] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
+  const [mounted, setMounted] = useState(false)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const initialLoadDone = useRef(false)
@@ -35,6 +41,10 @@ export function ImageGallery({ type }: ImageGalleryProps) {
 
   const IMAGES_PER_PAGE = 20
   const baseUrl = type === "horizontal" ? "https://pic.acofork.com/ri/h" : "https://pic.acofork.com/ri/v"
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const getColumnCount = () => {
     if (typeof window === "undefined") return 3
@@ -214,32 +224,34 @@ export function ImageGallery({ type }: ImageGalleryProps) {
         )}
       </div>
 
-      <Lightbox
-        open={lightboxOpen}
-        close={() => setLightboxOpen(false)}
-        index={lightboxIndex}
-        slides={images.map((image) => ({ src: image.url, title: `#${image.id}` }))}
-        controller={{ touchAction: "pan-y" }}
-        render={{
-          slide: (slide) => (
-            <div className="relative w-full h-full flex items-center justify-center">
-              <Image
-                src={slide.src}
-                alt={slide.title || ""}
-                width={1200}
-                height={900}
-                className="max-w-full max-h-[85vh] object-contain"
-                priority
-              />
-              {slide.title && (
-                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-center py-2">
-                  {slide.title}
-                </div>
-              )}
-            </div>
-          ),
-        }}
-      />
+      {mounted && lightboxOpen && (
+        <Lightbox
+          open={lightboxOpen}
+          close={() => setLightboxOpen(false)}
+          index={lightboxIndex}
+          slides={images.map((image) => ({ src: image.url, title: `#${image.id}` }))}
+          controller={{ touchAction: "pan-y" }}
+          render={{
+            slide: (slide) => (
+              <div className="relative w-full h-full flex items-center justify-center">
+                <Image
+                  src={slide.src}
+                  alt={slide.title || ""}
+                  width={1200}
+                  height={900}
+                  className="max-w-full max-h-[85vh] object-contain"
+                  priority
+                />
+                {slide.title && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-center py-2">
+                    {slide.title}
+                  </div>
+                )}
+              </div>
+            ),
+          }}
+        />
+      )}
     </div>
   )
 }
