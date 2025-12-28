@@ -151,22 +151,28 @@ export function ImageGallery({ type }: ImageGalleryProps) {
 
   useEffect(() => {
     if (galleryContainerRef.current) {
-      Fancybox.bind(galleryContainerRef.current, "[data-fancybox]", {
-        Thumbs: {
-          type: "classic",
-        },
-        Toolbar: {
-          display: {
-            left: ["infobar"],
-            middle: ["zoomIn", "zoomOut", "toggle1to1", "rotateCCW", "rotateCW", "flipX", "flipY"],
-            right: ["slideshow", "fullscreen", "download", "thumbs", "close"],
+      Fancybox.bind(
+        galleryContainerRef.current,
+        "[data-fancybox]",
+        {
+          Thumbs: {
+            type: "classic",
           },
-        },
-      })
+          Toolbar: {
+            display: {
+              left: ["infobar"],
+              middle: ["zoomIn", "zoomOut", "toggle1to1", "rotateCCW", "rotateCW", "flipX", "flipY"],
+              right: ["slideshow", "fullscreen", "download", "thumbs", "close"],
+            },
+          },
+        } as any,
+      )
     }
 
     return () => {
-      Fancybox.unbind(galleryContainerRef.current)
+      if (galleryContainerRef.current) {
+        Fancybox.unbind(galleryContainerRef.current)
+      }
     }
   }, [images])
 
