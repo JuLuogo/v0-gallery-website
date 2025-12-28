@@ -229,27 +229,8 @@ export function ImageGallery({ type }: ImageGalleryProps) {
           open={lightboxOpen}
           close={() => setLightboxOpen(false)}
           index={lightboxIndex}
-          slides={images.map((image) => ({ src: image.url, title: `#${image.id}` }))}
+          slides={images.map((image) => ({ src: image.url, alt: `#${image.id}` }))}
           controller={{ touchAction: "pan-y" }}
-          render={{
-            slide: (slide) => (
-              <div className="relative w-full h-full flex items-center justify-center">
-                <Image
-                  src={slide.src}
-                  alt={slide.title || ""}
-                  width={1200}
-                  height={900}
-                  className="max-w-full max-h-[85vh] object-contain"
-                  priority
-                />
-                {slide.title && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-center py-2">
-                    {slide.title}
-                  </div>
-                )}
-              </div>
-            ),
-          }}
         />
       )}
     </div>
