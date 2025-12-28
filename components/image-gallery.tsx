@@ -24,6 +24,7 @@ export function ImageGallery({ type }: ImageGalleryProps) {
   const [loading, setLoading] = useState(false)
   const [maxCount, setMaxCount] = useState<number>(0)
   const [countsLoaded, setCountsLoaded] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const initialLoadDone = useRef(false)
@@ -163,19 +164,24 @@ export function ImageGallery({ type }: ImageGalleryProps) {
           <div key={columnIndex} className="flex flex-col gap-4 flex-1">
             {column.map((image) => (
               <div key={`${type}-${image.id}`} className="group relative overflow-hidden rounded-lg bg-muted">
-                <Image
-                  src={image.url || "/placeholder.svg"}
-                  alt={`Gallery image ${image.id}`}
-                  width={800}
-                  height={600}
-                  className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
-                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  loading="lazy"
-                />
+                <button
+                  onClick={() => setSelectedImage(image)}
+                  className="w-full cursor-zoom-in"
+                >
+                  <Image
+                    src={image.url || "/placeholder.svg"}
+                    alt={`Gallery image ${image.id}`}
+                    width={800}
+                    height={600}
+                    className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    loading="lazy"
+                  />
+                </button>
 
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 pointer-events-none" />
 
-                <div className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm text-foreground text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm text-foreground text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                   #{image.id}
                 </div>
               </div>
@@ -201,6 +207,40 @@ export function ImageGallery({ type }: ImageGalleryProps) {
           <p className="text-muted-foreground text-sm">已加载全部 {maxCount} 张图片</p>
         )}
       </div>
+
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setSelectedImage(null)
+            }}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+          
+          <div className="relative max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            <Image
+              src={selectedImage.url}
+              alt={`Gallery image ${selectedImage.id}`}
+              width={1200}
+              height={900}
+              className="max-w-full max-h-[90vh] object-contain"
+              priority
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-center py-2">
+              #{selectedImage.id}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
