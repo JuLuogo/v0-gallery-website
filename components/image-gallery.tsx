@@ -12,6 +12,12 @@ interface ImageItem {
   url: string
 }
 
+declare global {
+  interface Window {
+    __picCounts?: { h: number; v: number }
+  }
+}
+
 export function ImageGallery({ type }: ImageGalleryProps) {
   const [images, setImages] = useState<ImageItem[]>([])
   const [page, setPage] = useState(1)
@@ -35,23 +41,49 @@ export function ImageGallery({ type }: ImageGalleryProps) {
   }
 
   useEffect(() => {
-    const fetchMaxCount = async () => {
-      try {
-        const response = await fetch("/api/counts")
-        const data = await response.json()
+    const fetchMaxCount = () => {
+      const script = document.createElement("script")
+      script.src = "https://pic.acofork.com/random.js"
+      script.async = true
 
-        const count = type === "horizontal" ? data.horizontal : data.vertical
-        setMaxCount(count)
-        setCountsLoaded(true)
-      } catch (error) {
-        console.error("Failed to fetch max count:", error)
+      script.onload = () => {
+        // random.js 会执行一个 IIFE，我们需要拦截它
+        const scriptContent = `
+          (function() {
+            var counts = window.__picCounts || {"h":979,"v":3596};
+            window.__picCounts = counts;
+          })();
+        `
+        const inlineScript = document.createElement("script")
+        inlineScript.textContent = scriptContent
+        document.head.appendChild(inlineScript)
+
+        setTimeout(() => {
+          const counts = window.__picCounts || { h: 979, v: 3596 }
+          const count = type === "horizontal" ? counts.h : counts.v
+          setMaxCount(count)
+          setCountsLoaded(true)
+        }, 100)
+      }
+
+      script.onerror = () => {
+        console.error("Failed to load random.js, using fallback counts")
         const fallbackCount = type === "horizontal" ? 979 : 3596
         setMaxCount(fallbackCount)
         setCountsLoaded(true)
       }
+
+      document.head.appendChild(script)
     }
 
-    fetchMaxCount()
+    // 如果已经加载过，直接使用缓存的值
+    if (window.__picCounts) {
+      const count = type === "horizontal" ? window.__picCounts.h : window.__picCounts.v
+      setMaxCount(count)
+      setCountsLoaded(true)
+    } else {
+      fetchMaxCount()
+    }
   }, [type])
 
   const loadImages = useCallback(() => {
