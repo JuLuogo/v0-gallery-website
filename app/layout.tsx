@@ -6,26 +6,17 @@ import './globals.css'
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
+const siteAvatarUrl =
+  'https://q2.qlogo.cn/headimg_dl?dst_uin=2726730791&spec=0'
+
 export const metadata: Metadata = {
   title: 'AcoFork PicGallery',
   description: 'Created with v0',
   generator: 'v0.app',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: siteAvatarUrl,
+    shortcut: siteAvatarUrl,
+    apple: siteAvatarUrl,
   },
 }
 
@@ -36,9 +27,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" href="https://q2.qlogo.cn/headimg_dl?dst_uin=2726730791&amp;spec=0"></link>
-      </head>
       <body className={`font-sans antialiased`}>
         {children}
         <Analytics />
