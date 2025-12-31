@@ -33,7 +33,7 @@ export function ImageGallery({ type }: ImageGalleryProps) {
   const galleryContainerRef = useRef<HTMLDivElement>(null)
 
   const IMAGES_PER_PAGE = 20
-  const baseUrl = type === "horizontal" ? "https://pic.acofork.com/ri/h" : "https://pic.acofork.com/ri/v"
+  const baseUrl = type === "horizontal" ? "https://pic.0721030.xyz/ri/h" : "https://pic.0721030.xyz/ri/v"
 
   const getColumnCount = () => {
     if (typeof window === "undefined") return 3
