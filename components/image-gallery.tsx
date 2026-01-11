@@ -26,6 +26,7 @@ export function ImageGallery({ type }: ImageGalleryProps) {
   const [loading, setLoading] = useState(false)
   const [maxCount, setMaxCount] = useState<number>(0)
   const [countsLoaded, setCountsLoaded] = useState(false)
+  const [failedImages, setFailedImages] = useState<Set<number>>(new Set())
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const initialLoadDone = useRef(false)
@@ -70,7 +71,7 @@ export function ImageGallery({ type }: ImageGalleryProps) {
           let count = 0
           if (type === "horizontal") count = counts.h
           else if (type === "vertical") count = counts.v
-          else count = counts.j || 100
+          else count = counts.j || 9999
           setMaxCount(count)
           setCountsLoaded(true)
         }, 100)
@@ -81,7 +82,7 @@ export function ImageGallery({ type }: ImageGalleryProps) {
         let fallbackCount = 0
         if (type === "horizontal") fallbackCount = 979
         else if (type === "vertical") fallbackCount = 3596
-        else fallbackCount = 100
+        else fallbackCount = 9999
         setMaxCount(fallbackCount)
         setCountsLoaded(true)
       }
@@ -94,7 +95,7 @@ export function ImageGallery({ type }: ImageGalleryProps) {
       let count = 0
       if (type === "horizontal") count = counts.h
       else if (type === "vertical") count = counts.v
-      else count = counts.j || 100
+      else count = counts.j || 9999
       setMaxCount(count)
       setCountsLoaded(true)
     } else {
@@ -195,7 +196,9 @@ export function ImageGallery({ type }: ImageGalleryProps) {
     const columnCount = getColumnCount()
     const columns: ImageItem[][] = Array.from({ length: columnCount }, () => [])
 
-    images.forEach((image, index) => {
+    const validImages = images.filter((img) => !failedImages.has(img.id))
+
+    validImages.forEach((image, index) => {
       const columnIndex = index % columnCount
       columns[columnIndex].push(image)
     })
@@ -220,6 +223,13 @@ export function ImageGallery({ type }: ImageGalleryProps) {
                     className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
                     sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     loading="lazy"
+                    onError={() => {
+                      setFailedImages((prev) => {
+                        const newSet = new Set(prev)
+                        newSet.add(image.id)
+                        return newSet
+                      })
+                    }}
                   />
                 </a>
 
