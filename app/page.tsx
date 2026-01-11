@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/site-header"
 
 function HomeContent() {
   const searchParams = useSearchParams()
-  const [galleryType, setGalleryType] = useState<"horizontal" | "vertical">("horizontal")
+  const [galleryType, setGalleryType] = useState<"horizontal" | "vertical" | "joined">("horizontal")
 
   useEffect(() => {
     const type = searchParams.get("type")
@@ -14,6 +14,8 @@ function HomeContent() {
       setGalleryType("vertical")
     } else if (type === "horizontal") {
       setGalleryType("horizontal")
+    } else if (type === "joined") {
+      setGalleryType("joined")
     }
   }, [searchParams])
 

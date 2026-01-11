@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation"
 import { ModeToggle } from "@/components/mode-toggle"
 
 interface SiteHeaderProps {
-  galleryType?: "horizontal" | "vertical"
-  setGalleryType?: (type: "horizontal" | "vertical") => void
+  galleryType?: "horizontal" | "vertical" | "joined"
+  setGalleryType?: (type: "horizontal" | "vertical" | "joined") => void
 }
 
 export function SiteHeader({ galleryType, setGalleryType }: SiteHeaderProps) {
@@ -55,16 +55,22 @@ export function SiteHeader({ galleryType, setGalleryType }: SiteHeaderProps) {
               >
                 竖屏
               </button>
-              <Link
-                href="/j"
+              <button
+                onClick={() => {
+                  if (isHomePage && setGalleryType) {
+                    setGalleryType("joined")
+                  } else {
+                    window.location.href = "/?type=joined"
+                  }
+                }}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  pathname === "/j"
+                  isHomePage && galleryType === "joined"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 自选
-              </Link>
+              </button>
             </div>
             <ModeToggle />
           </div>

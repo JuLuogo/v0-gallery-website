@@ -6,7 +6,7 @@ import { Fancybox } from "@fancyapps/ui"
 import "@fancyapps/ui/dist/fancybox/fancybox.css"
 
 interface ImageGalleryProps {
-  type: "horizontal" | "vertical"
+  type: "horizontal" | "vertical" | "joined"
 }
 
 interface ImageItem {
@@ -16,7 +16,7 @@ interface ImageItem {
 
 declare global {
   interface Window {
-    __picCounts?: { h: number; v: number }
+    __picCounts?: { h: number; v: number; j?: number }
   }
 }
 
@@ -33,7 +33,12 @@ export function ImageGallery({ type }: ImageGalleryProps) {
   const galleryContainerRef = useRef<HTMLDivElement>(null)
 
   const IMAGES_PER_PAGE = 20
-  const baseUrl = type === "horizontal" ? "https://pic.0721030.xyz/ri/h" : "https://pic.0721030.xyz/ri/v"
+  const baseUrl =
+    type === "horizontal"
+      ? "https://pic.0721030.xyz/ri/h"
+      : type === "vertical"
+      ? "https://pic.0721030.xyz/ri/v"
+      : "https://pic.0721030.xyz/ri/j"
 
   const getColumnCount = () => {
     if (typeof window === "undefined") return 3
@@ -62,7 +67,10 @@ export function ImageGallery({ type }: ImageGalleryProps) {
 
         setTimeout(() => {
           const counts = window.__picCounts || { h: 979, v: 3596 }
-          const count = type === "horizontal" ? counts.h : counts.v
+          let count = 0
+          if (type === "horizontal") count = counts.h
+          else if (type === "vertical") count = counts.v
+          else count = counts.j || 100
           setMaxCount(count)
           setCountsLoaded(true)
         }, 100)
@@ -70,7 +78,10 @@ export function ImageGallery({ type }: ImageGalleryProps) {
 
       script.onerror = () => {
         console.error("Failed to load random.js, using fallback counts")
-        const fallbackCount = type === "horizontal" ? 979 : 3596
+        let fallbackCount = 0
+        if (type === "horizontal") fallbackCount = 979
+        else if (type === "vertical") fallbackCount = 3596
+        else fallbackCount = 100
         setMaxCount(fallbackCount)
         setCountsLoaded(true)
       }
@@ -79,7 +90,11 @@ export function ImageGallery({ type }: ImageGalleryProps) {
     }
 
     if (window.__picCounts) {
-      const count = type === "horizontal" ? window.__picCounts.h : window.__picCounts.v
+      const counts = window.__picCounts
+      let count = 0
+      if (type === "horizontal") count = counts.h
+      else if (type === "vertical") count = counts.v
+      else count = counts.j || 100
       setMaxCount(count)
       setCountsLoaded(true)
     } else {
